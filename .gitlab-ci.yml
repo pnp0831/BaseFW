@@ -1,0 +1,50 @@
+image: node:12.16.1
+
+before_script:
+  - apt-get update -qy
+  - apt-get install -y ruby-dev
+  - gem install dpl
+
+stages:
+  - test
+  - test_deploy
+  - deploy
+
+test:
+  stage: test
+  before_script:
+    - yarn # install dependencies
+  script:
+    # linting and unit test
+    - yarn test
+  only:
+    - merge_requests
+
+test_deploy:
+  stage: test_deploy
+  before_script:
+    - yarn # install dependencies
+  script:
+    # linting and unit test
+    - yarn test
+  only:
+    - staging
+    - master
+
+deploy_staging:
+  type: deploy_staging
+  stage: deploy
+  image: ruby:latest
+  script:
+    - dpl --provider=heroku --app=$HEROKU_APP_STAGING --api-key=$HEROKU_API_KEY
+  only:
+    - staging
+
+deploy_production:
+  type: deploy_production
+  stage: deploy
+  image: ruby:latest
+  script:
+    - dpl --provider=heroku --app=$HEROKU_APP_PRODUCTION --api-key=$HEROKU_API_KEY
+  only:
+    - master
